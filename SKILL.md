@@ -37,8 +37,27 @@ metadata:
 ## 通用说明
 
 - 所有写操作需要在 `Authorization` 头携带 API Key：`Bearer {BLOG_API_KEY}`
-- API Key 需要对应权限：`write`（创建）、`update`（修改）、`delete`（删除）、`publish`（发布）
-- GET 请求一般无需认证（公开接口），但回收站等接口需要 `read` 权限
+- API Key 权限按资源+操作细分，格式为 `resource:action`
+- 权限列表：
+
+| 权限 | 说明 |
+|------|------|
+| `article:read` | 查看文章详情和列表 |
+| `article:write` | 创建文章 |
+| `article:update` | 修改文章 |
+| `article:delete` | 删除文章 |
+| `article:publish` | 发布/取消发布文章 |
+| `category:read` | 查看分类列表 |
+| `category:write` | 创建分类 |
+| `category:update` | 修改分类 |
+| `category:delete` | 删除分类 |
+| `command:read` | 查看命令详情和列表 |
+| `command:write` | 创建命令 |
+| `command:update` | 修改命令 |
+| `command:delete` | 删除命令 |
+
+- GET 请求一般无需认证（公开接口），但回收站等接口需要对应 `read` 权限
+- 建议创建 Key 时选择 `article:write,article:update,article:delete,article:publish,category:write,category:update,category:delete,command:write,command:update,command:delete` 全权限
 - 所有请求和响应均为 JSON 格式
 
 ---
@@ -92,7 +111,7 @@ Content-Type: application/json
 
 **返回：** 201 Created，包含完整文章对象（含 `id`、`slug` 等）
 
-需要 `write` 权限。
+需要 `article:write` 权限。
 
 ### 1.4 更新文章
 
@@ -104,7 +123,7 @@ Content-Type: application/json
 
 请求体字段同创建，所有字段可选。
 
-需要 `update` 权限。
+需要 `article:update` 权限。
 
 ### 1.5 删除文章（软删除，移入回收站）
 
@@ -113,7 +132,7 @@ DELETE {BLOG_API_URL}/articles/:id
 Authorization: Bearer {BLOG_API_KEY}
 ```
 
-需要 `delete` 权限。
+需要 `article:delete` 权限。
 
 ### 1.6 发布/取消发布
 
@@ -129,7 +148,7 @@ Content-Type: application/json
 |------|------|------|------|
 | `is_published` | boolean | ✅ | `true` 发布，`false` 取消发布 |
 
-需要 `publish` 权限。
+需要 `article:publish` 权限。
 
 ### 1.7 置顶/取消置顶
 
@@ -138,7 +157,7 @@ PATCH {BLOG_API_URL}/articles/:id/pin
 Authorization: Bearer {BLOG_API_KEY}
 ```
 
-需要 `update` 权限。切换置顶状态。
+需要 `article:update` 权限。切换置顶状态。
 
 ---
 
@@ -166,7 +185,7 @@ Content-Type: application/json
 |------|------|------|------|
 | `name` | string | ✅ | 分类名称 |
 
-需要 `write` 权限。
+需要 `category:write` 权限。
 
 ### 2.3 更新分类
 
@@ -182,7 +201,7 @@ Content-Type: application/json
 |------|------|------|------|
 | `name` | string | ✅ | 新分类名称 |
 
-需要 `update` 权限。
+需要 `category:update` 权限。
 
 ### 2.4 删除分类
 
@@ -193,7 +212,7 @@ Authorization: Bearer {BLOG_API_KEY}
 
 注意：分类下有文章时无法删除，需先移除文章关联。
 
-需要 `delete` 权限。
+需要 `category:delete` 权限。
 
 ---
 
@@ -245,7 +264,7 @@ Content-Type: application/json
 | `categoryId` | number | ❌ | 所属分类ID |
 | `content` | string | ❌ | Markdown 详细说明 |
 
-需要 `write` 权限。
+需要 `command:write` 权限。
 
 ### 3.4 更新命令
 
@@ -257,7 +276,7 @@ Content-Type: application/json
 
 请求体字段同创建，所有字段可选。
 
-需要 `update` 权限。
+需要 `command:update` 权限。
 
 ### 3.5 设置命令关联
 
@@ -273,7 +292,7 @@ Content-Type: application/json
 |------|------|------|------|
 | `relatedIds` | number[] | ✅ | 关联命令ID数组（全量替换） |
 
-需要 `update` 权限。设置后会覆盖之前的关联。
+需要 `command:update` 权限。设置后会覆盖之前的关联。
 
 ### 3.6 删除命令（软删除）
 
@@ -282,7 +301,7 @@ DELETE {BLOG_API_URL}/commands/:id
 Authorization: Bearer {BLOG_API_KEY}
 ```
 
-需要 `delete` 权限。
+需要 `command:delete` 权限。
 
 ---
 
@@ -311,7 +330,7 @@ Content-Type: application/json
 | `name` | string | ✅ | 分类名称 |
 | `sort` | number | ❌ | 排序权重，默认 0 |
 
-需要 `write` 权限。
+需要 `command:write` 权限。
 
 ### 4.3 更新命令分类
 
@@ -328,7 +347,7 @@ Content-Type: application/json
 | `name` | string | ❌ | 新分类名称 |
 | `sort` | number | ❌ | 排序权重 |
 
-需要 `update` 权限。
+需要 `command:update` 权限。
 
 ### 4.4 删除命令分类
 
@@ -339,7 +358,7 @@ Authorization: Bearer {BLOG_API_KEY}
 
 删除后该分类下的命令的 `categoryId` 会被设为 null。
 
-需要 `delete` 权限。
+需要 `command:delete` 权限。
 
 ---
 
@@ -388,7 +407,7 @@ Authorization: Bearer {BLOG_API_KEY}
 
 - API Key 在博客后台管理「API Key」tab 中创建
 - 创建 Key 后立即复制保存，关闭后无法恢复
-- 建议使用 `write,read,update,delete,publish` 全权限的 Key
+- 权限按 `资源:操作` 格式细分，可按需勾选
 - 文章 slug 由后端自动生成（标题 + 时间戳后4位）
 - 命令 slug 由后端自动生成（命令名小写 + 特殊字符替换）
 - 删除操作均为软删除（移入回收站），可恢复
