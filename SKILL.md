@@ -243,6 +243,12 @@ GET {BLOG_API_URL}/commands?page=1&limit=20&q=关键词&categoryId=1
 GET {BLOG_API_URL}/commands/:slug
 ```
 
+**参数说明：**
+
+- `:slug` 优先用命令的 `slug` 字段（从列表接口 3.1 获取）
+- 也可传命令 `name`，但**含特殊字符的命令名必须 URL 编码**（如 `g++` → `g%2B%2B`，否则 `+` 会被解析为空格）
+- **推荐做法**：先调用 3.1 列表接口拿到 `slug`，再用 `slug` 请求详情，避免特殊字符问题
+
 **返回：** 完整命令对象，含 `content_html`、`categoryRel`、`relatedCommands`（相关命令列表）
 
 `relatedCommands` 格式：`[{ id, name, slug, description }, ...]`，最多5个，优先手动关联，不足用同分类补充。
@@ -380,6 +386,16 @@ Authorization: Bearer {BLOG_API_KEY}
 2. 调用 `POST /api/commands` 创建命令
 3. 告知用户命令已添加
 
+### 获取命令详情（含特殊字符的命令）
+
+用户说："帮我查下 g++ 命令的说明"
+
+1. 先调用 `GET /api/commands?q=g++` 查列表，找到命令的 `slug` 字段（`g++` 的 slug 是 `g--`）
+2. 用 slug 调用 `GET /api/commands/g--` 获取详情
+3. 告知用户命令详情
+
+> **重要**：不要直接用命令名拼 URL（如 `/api/commands/g++`），因为 `+` 在 URL 中会被解析为空格导致查不到。必须用列表返回的 `slug`，或对命令名做 URL 编码（`g++` → `g%2B%2B`）。
+
 ### 创建命令分类
 
 用户说："加一个网络工具分类"
@@ -409,5 +425,6 @@ Authorization: Bearer {BLOG_API_KEY}
 - 创建 Key 后立即复制保存，关闭后无法恢复
 - 权限按 `资源:操作` 格式细分，可按需勾选
 - 文章 slug 由后端自动生成（标题 + 时间戳后4位）
-- 命令 slug 由后端自动生成（命令名小写 + 特殊字符替换）
+- 命令 slug 由后端自动生成（命令名小写 + 特殊字符替换，如 `g++` 的 slug 是 `g--`）
+- **获取命令详情时**：`:slug` 参数推荐用列表接口返回的 `slug` 字段；若直接用命令名且含特殊字符（如 `+`、`/`、空格），必须做 URL 编码（`encodeURIComponent`），否则会解析错误（例：`g++` 会被解析成空格）
 - 删除操作均为软删除（移入回收站），可恢复
