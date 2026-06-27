@@ -55,9 +55,11 @@ metadata:
 | `command:write` | 创建命令 |
 | `command:update` | 修改命令 |
 | `command:delete` | 删除命令 |
+| `command:verify` | 审核/取消审核命令（独立权限，避免批量导入时被误审核） |
 
 - GET 请求一般无需认证（公开接口），但回收站等接口需要对应 `read` 权限
-- 建议创建 Key 时选择 `article:write,article:update,article:delete,article:publish,category:write,category:update,category:delete,command:write,command:update,command:delete` 全权限
+- 建议创建 Key 时选择 `article:write,article:update,article:delete,article:publish,category:write,category:update,category:delete,command:write,command:update,command:delete` 全权限（不含 `command:verify`，审核需单独授权）
+- 新建命令默认 `verified: false`（待审核），需具有 `command:verify` 权限的账号手动审核后才会在前台显示「✓ 人工核对」标志
 - 所有请求和响应均为 JSON 格式
 
 ---
@@ -308,6 +310,24 @@ Authorization: Bearer {BLOG_API_KEY}
 ```
 
 需要 `command:delete` 权限。
+
+### 3.7 审核/取消审核命令
+
+```
+PATCH {BLOG_API_URL}/commands/:id/verify
+Authorization: Bearer {BLOG_API_KEY}
+```
+
+切换命令的审核状态（toggle）：未审核 → 已审核，已审核 → 未审核。
+
+**返回：**
+```json
+{ "message": "Command verified", "verified": true, "verifiedAt": "2026-06-28T..." }
+```
+
+需要 `command:verify` 权限（独立权限，与 `command:write/update` 分开授权）。审核后命令在前台详情页和列表页显示「✓ 人工核对」标志。
+
+**筛选审核状态：** 列表接口（3.1）支持 `?verified=true` 或 `?verified=false` 筛选。
 
 ---
 
